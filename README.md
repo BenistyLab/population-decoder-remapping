@@ -1,6 +1,6 @@
 # Population decoder remapping
 
-Reproducible population decoder for Neuropixels remapping. This repository provides a standalone pipeline to **train, predict, evaluate, and compute cross-room (xy2xy) mapping** using the FR2XY model. It is designed to decode position from large-scale population dynamics recorded in regions such as the medial entorhinal cortex (MEC) and subiculum/presubiculum (SUBC).
+This repository provides a standalone pipeline to **train, predict, evaluate, and compute cross-room mapping** for neural population dynamics. Using a neural network it predicts spatial positions from Neuropixels recordings in the medial entorhinal cortex (MEC) and subicular complex (SUBC).
 
 For the main project, see [BenistyLab/population-decoder-remapping](https://github.com/BenistyLab/population-decoder-remapping).
 
