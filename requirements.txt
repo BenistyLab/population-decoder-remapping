@@ -1,0 +1,17 @@
+# Runtime-only (publication pipeline). Local logs + filesystem artifacts only.
+numpy>=1.22
+scipy>=1.9
+pandas>=1.5
+matplotlib>=3.6
+torch>=2.0
+scikit-learn>=1.2
+pyyaml>=6.0
+shapely>=2.0
+joblib>=1.2
+tqdm>=4.64
+torchinfo>=1.6
+POT>=0.9
+seaborn>=0.12
+adjustText>=0.8
+matplotlib-venn>=0.11
+upsetplot>=0.8

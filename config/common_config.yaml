@@ -1,0 +1,150 @@
+# Full reference: README.md
+seed: 0
+
+# Plot styling (evaluate-stage decoder-by-room figures; same hex keys as summary pipeline).
+colors:
+  room_colors:
+    A: "#3284bd"
+    B: "#f68e42"
+    a: "#00a651"
+
+datasets:
+  clusters: "clusters_dataset.csv"
+  spike_rates: "spike_rate_dataset.csv"
+  positions: "positions_dataset.csv"
+  local_config: "config.yaml"
+  main: "dataset.csv"
+  main_polar: "dataset_polar.csv"
+  clusters_mat: "Clusters.mat"
+  positions_mat: "AnalyzedLog.mat"
+
+directories:
+  log: "log/<session>"
+  checkpoint: "output/<session>/checkpoints"
+  output: "output/<session>"
+  data: "data/<session>"
+  config: "config"
+
+run:
+  type: "train" # "train", "evaluate", "sweep"
+  rerun: False # True to rerun the same run
+  # rooms: ['A', 'B']  # optional: restrict to these rooms (intersection with data-derived rooms)
+
+training:
+  cross_validation_folds: 10
+  cross_validation_fold_offset: 0
+  fold_offset_range: 1  # Number of fold offsets to use (use 1 to #folds)
+
+xy2xy:
+  allowed_pairs: [['A', 'a'], ['A', 'B'], ['B', 'a']]  # Room pairs to analyze
+  min_points_required: 10  # Minimum data points required for analysis
+  room_order: ['A', 'a', 'Ap', 'mA', 'Am', 'B', 'b', 'Bp', 'mB', 'Bm', 'C', 'c', 'Cp', 'mC', 'Cm']  # decoder bar plot order
+
+#evaluating:
+
+preprocessing:
+  time_filter:
+    #range: [100, 3500] # time range in seconds
+    bin_width: 0.25 # time bin width in seconds
+    gaussian_sigma_s: 0.05 # Gaussian smoothing sigma in seconds
+    kspike_N: 10 # N spikes for adaptive rate
+  cluster_filter:
+    include:
+      KSlabel: [ 'good' ] # include only good clusters based on KSlabel
+    exclude:
+      BClabel: [ 'noise' ] # exclude noise clusters based on BClabel
+  min_rate_filter: 0.1 # minimum firing rate in Hz
+  max_rate_filter: 50.0 # maximum firing rate in Hz
+  angle_bins: 36 # angle bins for polar analysis
+  n_pixel: 34 # number of pixels for rate map (approximately 4 cm per pixel)
+  rooms_index: ~
+
+  min_fr_bin_treshold_s: 0.2 # minimum time (s) in a bin to consider for firing rate calculation
+  min_spike_treshold: 2 # minimum spikes in a bin to consider for firing rate calculation
+
+  position_label: 'PC_HeadPos' # position label in the behavior data (i.e., 'TC_HeadPos'/'PC_HeadPos'/'EC_TailPos')
+  frame_label: 'TC_frame' # use TC_frame for MazeLog video alignment; PC_frame is a different timeline
+  bin_width_s: 60 # Time-binning for per-timebin table (default: 1 minute)
+  # Gap classification thresholds
+  long_time_threshold_s: 5   # threshold for long gaps in seconds (default: 3s)
+  long_dist_threshold_cm: 15 # threshold for long gaps in cm (default: 15cm)
+  # "Too-fast" interpolation diagnostics
+  v_local_window_s: 2.0      # seconds of local baseline outside each gap
+  speed_max_cm_s: null       # optional absolute cap (e.g., 120). null disables
+  z_speed_thresh: 3.5        # MAD-z threshold for relative "too-fast"
+  # Probability usage
+  lowP_thresh: 0.3           # frames with P < this counted as low-confidence
+
+  # Room transition padding
+  room_transition_padding_s: 5.0  # Padding in seconds on each side of room transitions (5s before + 5s after = 10s total gap)
+
+  resample:
+    enabled: True # Enable resampling
+    rate_hz: 20.0  # Resample all data to this rate (in Hz)
+    gap_threshold_s: 0.25  # Maximum gap duration to fill (in seconds)
+    interpolator: 'linear'  # Interpolation method
+    smoothing: ~ # Smoothing method (None | 'gaussian' | 'savgol')
+    sigma_samples: 1.0  # Gaussian σ in samples (1=50ms @20Hz)
+    window_samples: 7  # For savgol
+    polyorder: 2  # For savgol
+
+
+
+model:
+  templates:
+
+    FR2XY:
+      name: 'FR2XY'
+      feature: 'cells'
+      target: 'xy_position'
+
+      #input_dim: n_cells
+      output_dim: 2
+      seq_length: 100 # ≈ 5 seconds @20 Hz
+      last_state: True
+      multi_room: True
+      l1_weight: 0.0
+      l2_weight: 1.0
+      bpdecay: 0.01
+      cell_indices: ~
+      n_active_cells: ~
+      n_total_cells: ~
+      cell_filter: ~
+
+      latent:
+        output_dim: 64
+        hidden_dims: [256, 128]
+        dropout_prob: 0.1
+        batch_norm: True
+        activation: relu
+        initialization_type: xavier
+
+      decoder:
+        hidden_dims: [32, 32, 16, 8]
+        dropout_prob: 0.1
+        batch_norm: True
+        activation: relu
+        initialization_type: xavier
+
+      rnn:
+        hidden_dim: 512
+        num_layers: 1
+        bidirectional: False
+        initialization_type: xavier
+
+      batch_size: 1024
+      max_epochs: 500
+      early_stopping_patience: 50
+      min_epochs: 50
+      save_epochs_interval: 5
+
+      optimizer:
+        type: 'Adam'
+        learning_rate: 1e-3
+        weight_decay: 1e-4
+        scheduler:
+          active: False
+          factor: 0.1
+          patience: 50
+
+

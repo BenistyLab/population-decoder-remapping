@@ -1,0 +1,11 @@
+metadata:
+  session: 1120_09062024_2rooms
+  group: All_Cells
+  version: Neuropixel_Analysis
+model:
+  name: FR2XY
+preprocessing:
+  rooms_index:
+    A: 0
+    B: 1
+    a: 0
